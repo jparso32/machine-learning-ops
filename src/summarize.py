@@ -40,7 +40,19 @@ def summarize_table(df: pd.DataFrame, name: str) -> dict[str, Any]:
         - A table can have zero rows. Do not divide by zero.
         - Return plain Python numbers so the result can be written as JSON.
     """
-    raise NotImplementedError("TODO(student): summarize one table")
+    mb_before = memory_mb(df)
+    rows, cols = df.shape
+    missing_pct = float(df.isna().to_numpy().sum() / (rows * cols) * 100) if rows * cols > 0 else 0.0
+    mb_after = memory_mb(reduce_memory(df))
+
+    return {
+        "table": name,
+        "rows": int(rows),
+        "cols": int(cols),
+        "mb_before": float(mb_before),
+        "mb_after": float(mb_after),
+        "missing_pct": float(missing_pct),
+    }
 
 
 # TODO(student)
@@ -60,7 +72,23 @@ def summarize_all(config: dict[str, Any]) -> list[dict[str, Any]]:
         - The reports folder may not exist yet.
         - Load and summarize one table at a time so memory stays low.
     """
-    raise NotImplementedError("TODO(student): summarize all tables and write the report")
+    import json
+
+    reports = []
+
+    for name in config["tables"]:
+        df = load_table(name, config)
+        reports.append(summarize_table(df, name))
+        del df
+
+    reports_dir = config["paths"]["reports_dir"]
+    reports_dir.mkdir(parents=True, exist_ok=True)
+
+    report_path = reports_dir / SUMMARY_FILENAME
+    with report_path.open("w", encoding="utf-8") as f:
+        json.dump(reports, f, indent=2)
+
+    return reports
 
 
 # PROVIDED
