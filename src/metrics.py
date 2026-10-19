@@ -7,7 +7,7 @@ ranking metrics that look at the scores themselves.
 from __future__ import annotations
 
 import numpy as np
-from sklearn.metrics import average_precision_score, roc_auc_score
+from sklearn.metrics import average_precision_score, roc_auc_score, roc_curve
 
 ArrayLike = np.ndarray | list
 
@@ -47,11 +47,8 @@ def ks_statistic(y_true: ArrayLike, y_score: ArrayLike) -> float:
           at every threshold.
         - Return a plain Python float.
     """
-    from sklearn.metrics import roc_curve
-
     fpr, tpr, thresholds = roc_curve(y_true, y_score)
     return float(np.max(np.abs(tpr - fpr)))
-
 
 # TODO(student)
 def evaluate(y_true: ArrayLike, y_score: ArrayLike) -> dict[str, float]:

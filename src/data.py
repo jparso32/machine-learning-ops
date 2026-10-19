@@ -58,26 +58,28 @@ def load_split(config: dict[str, Any]) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     app = load_application(config)
     id_col = config["id_col"]
-    split_file = config["paths"]["split_file"]
 
-    split_df = pd.read_csv(split_file, dtype={id_col: app[id_col].dtype})
+    split = pd.read_csv(
+        config["paths"]["split_file"],
+        dtype={id_col: app[id_col].dtype}
+    )
 
-    if split_df[id_col].duplicated().any():
-        raise ValueError("Split file contains duplicate applicant IDs.")
+    if split[id_col].isna().any() or split[id_col].duplicated().any():
+        raise ValueError("Split IDs must be present and unique")
 
-    if not split_df["split"].isin(["train", "valid"]).all():
-        raise ValueError("Split file contains invalid split values.")
+    if not split["split"].isin(["train", "valid"]).all():
+        raise ValueError("Split values must be train or valid")
 
-    if (
-        len(split_df) != len(app)
-        or set(split_df[id_col]) != set(app[id_col])
-    ):
-        raise ValueError("Split file IDs do not match the application sample one-to-one.")
+    if app[id_col].isna().any() or app[id_col].duplicated().any():
+        raise ValueError("Application IDs must be present and unique")
 
-    split_ids = split_df.set_index(id_col)["split"]
-    app_splits = app[id_col].map(split_ids)
+    if set(split[id_col]) != set(app[id_col]):
+        raise ValueError("Split IDs do not match the sample")
 
-    train_df = app.loc[app_splits == "train"].reset_index(drop=True)
-    valid_df = app.loc[app_splits == "valid"].reset_index(drop=True)
+    train_ids = split.loc[split["split"] == "train", id_col]
+    valid_ids = split.loc[split["split"] == "valid", id_col]
+
+    train_df = app.loc[app[id_col].isin(train_ids)].reset_index(drop=True)
+    valid_df = app.loc[app[id_col].isin(valid_ids)].reset_index(drop=True)
 
     return train_df, valid_df

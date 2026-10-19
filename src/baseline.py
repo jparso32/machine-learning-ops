@@ -4,8 +4,6 @@ Run it with ``python run.py baseline`` or ``python -m src.baseline``. It trains 
 split only, scores the validation split, and writes reports/metrics.json.
 """
 
-
-
 from __future__ import annotations
 
 import argparse
@@ -55,11 +53,12 @@ def clean_application(df: pd.DataFrame) -> pd.DataFrame:
         - It must work on frames without TARGET too.
     """
     cleaned = df.copy()
+
     anomaly = cleaned["DAYS_EMPLOYED"] == DAYS_EMPLOYED_SENTINEL
     cleaned["DAYS_EMPLOYED_ANOM"] = anomaly.astype(int)
     cleaned.loc[anomaly, "DAYS_EMPLOYED"] = float("nan")
-    return cleaned
 
+    return cleaned
 
 # TODO(student)
 def get_feature_columns(df: pd.DataFrame, config: dict[str, Any]) -> tuple[list[str], list[str]]:
@@ -85,16 +84,15 @@ def get_feature_columns(df: pd.DataFrame, config: dict[str, Any]) -> tuple[list[
     categorical_cols = []
 
     for col in df.columns:
-        if col in (config["id_col"], config["target_col"]):
+        if col in [config["id_col"], config["target_col"]]:
             continue
 
-        if pd.api.types.is_numeric_dtype(df[col]):
+        if pd.api.types.is_numeric_dtype(df[col]) or pd.api.types.is_bool_dtype(df[col]):
             numeric_cols.append(col)
         else:
             categorical_cols.append(col)
 
     return numeric_cols, categorical_cols
-
 
 # TODO(student)
 def build_preprocessor(numeric_cols: list[str], categorical_cols: list[str]) -> ColumnTransformer:
@@ -131,7 +129,6 @@ def build_preprocessor(numeric_cols: list[str], categorical_cols: list[str]) -> 
         ("categorical", categorical_pipeline, categorical_cols),
     ])
 
-
 # TODO(student)
 def build_model(config: dict[str, Any], preprocessor: ColumnTransformer) -> Pipeline:
     """Build the full (unfitted) model: preprocessing followed by logistic regression.
@@ -149,12 +146,14 @@ def build_model(config: dict[str, Any], preprocessor: ColumnTransformer) -> Pipe
         - Take every setting from the config, so a config change needs no code change.
         - Give each step a short, readable name.
     """
+    classifier = LogisticRegression(
+        random_state=config["seed"],
+        **config["baseline"]
+    )
+
     return Pipeline([
         ("preprocessor", preprocessor),
-        ("classifier", LogisticRegression(
-            **config["baseline"],
-            random_state=config["seed"],
-        )),
+        ("model", classifier),
     ])
 
 
@@ -179,20 +178,20 @@ def write_metrics(metrics: dict[str, float], extra: dict[str, Any], path: str | 
     """
     results = {**metrics, **extra}
 
-    missing_keys = [key for key in METRICS_KEYS if key not in results]
-    if missing_keys:
-        raise ValueError(f"Missing required metric keys: {missing_keys}")
+    missing = set(METRICS_KEYS) - set(results)
+    if missing:
+        raise ValueError(f"Missing metric keys: {sorted(missing)}")
 
     results = {
-        key: results[key].item() if hasattr(results[key], "item") else results[key]
-        for key in METRICS_KEYS
+        key: value.item() if hasattr(value, "item") else value
+        for key, value in results.items()
     }
 
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    with path.open("w", encoding="utf-8") as f:
-        json.dump(results, f, indent=2)
+    with path.open("w") as file:
+        json.dump(results, file, indent=2)
 
 
 # TODO(student)
@@ -230,31 +229,23 @@ def run_baseline(config: dict[str, Any]) -> dict[str, Any]:
     train_df = clean_application(train_df)
     valid_df = clean_application(valid_df)
 
-    target_col = config["target_col"]
-
     numeric_cols, categorical_cols = get_feature_columns(train_df, config)
     feature_cols = numeric_cols + categorical_cols
+    target_col = config["target_col"]
 
-    model = build_model(
-        config,
-        build_preprocessor(numeric_cols, categorical_cols),
-    )
+    preprocessor = build_preprocessor(numeric_cols, categorical_cols)
+    model = build_model(config, preprocessor)
 
-    X_train = train_df[feature_cols]
-    y_train = train_df[target_col]
-    X_valid = valid_df[feature_cols]
-    y_valid = valid_df[target_col]
+    model.fit(train_df[feature_cols], train_df[target_col])
 
-    model.fit(X_train, y_train)
-    y_score = model.predict_proba(X_valid)[:, 1]
-
-    metrics = evaluate(y_valid, y_score)
+    scores = model.predict_proba(valid_df[feature_cols])[:, 1]
+    metrics = evaluate(valid_df[target_col], scores)
 
     extra = {
         "model": MODEL_NAME,
         "n_train": int(len(train_df)),
         "n_valid": int(len(valid_df)),
-        "valid_default_rate": float(y_valid.mean()),
+        "valid_default_rate": float(valid_df[target_col].mean()),
         "seed": int(config["seed"]),
     }
 

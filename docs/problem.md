@@ -1,60 +1,37 @@
-<!-- PROVIDED template. Copy it to docs/problem.md and fill that copy in:
-       cp docs/problem_template.md docs/problem.md
-     Replace every line with your answer. `python run.py check` fails while any remain.
-     Keep the headings. Delete the italic questions once you have answered them if you like. -->
-
 # Problem statement
-
-Team: Rithvik Gottumukkala, Jayden Parsons, Govardhan Vyloppully
 
 ## 1. Who uses the model, and for what decision?
 
-*Who looks at the model's output? What decision do they make with it, and when in the
-application process? What happens today without a model?*
-
-Loan officers use the model to estimate whether an applicant will default and help decide whether to approve, reject, or review a loan application. Without the model, they rely on existing rules and applicant information.
+Loan officers use the model to estimate payment difficulty risk before deciding to approve, review, or reject an application. Without it, they would rely on existing lending rules and manual review. We assume this workflow because the current process was not provided.
 
 ## 2. The options
 
-*The decision has three outcomes: approve, refer for manual review, or reject. When should
-each one happen? Who handles a referral, and what does a referral cost in time or money?*
-
-Low-risk applicants can be approved, high-risk applicants can be rejected, and uncertain cases can be referred to a loan officer for manual review. Manual reviews take extra time and delay the decision.
+Low-risk applications could be approved, uncertain applications sent for manual review, and high-risk applications considered for rejection. A loan officer would handle referrals. Review takes staff time and delays the decision, but its exact cost was not provided. Thresholds still need to be selected and evaluated.
 
 ## 3. The cost of approving someone who defaults
 
-*Use the cost numbers on the instructor's task card. What does the lender lose when a
-borrower who was approved does not repay? State the number and its unit.*
-
-Approving someone who defaults costs the lender 10 units because the borrower does not repay the loan as expected.
+Approving someone who does not repay costs the lender 10 cost units per applicant. These are the assignment's units, not a specific dollar amount.
 
 ## 4. The cost of rejecting someone who would have repaid
 
-*Use the cost numbers on the task card. What does the lender lose by turning away a good
-customer? How does this compare with the cost in section 3, and what does that ratio
-mean for where you put the decision threshold?*
-
-Rejecting someone who would have repaid costs the lender 1 unit in lost business. Since approving a defaulter costs ten times more, the lender should be cautious when approving loans but avoid rejecting too many reliable borrowers.
+Rejecting someone who would have repaid costs 1 cost unit. Approving a defaulter costs 10 times as much, so the lender should be more cautious about approval. With calibrated probabilities and only approve or reject options, the cost-based rejection threshold would be about 9.1% risk. Manual review and its cost could change this policy.
 
 ## 5. Success metrics, and why
 
-*Which metrics will you report (ROC-AUC, PR-AUC, KS, expected cost)? What does each one
-tell you that the others do not? Why is accuracy a poor choice when about 8 percent of
-applicants default? What result would count as good enough to be useful?*
+ROC-AUC measures how well the model ranks risky applicants. PR-AUC focuses on finding applicants with payment difficulties, and KS measures the largest separation between the two groups' score distributions. Expected cost measures the effect of decisions using the 10:1 costs.
 
-We will use ROC-AUC, PR-AUC, KS, and expected cost to measure how well the model ranks risk and how costly its decisions are. Accuracy is misleading because predicting that nobody defaults would still achieve about 92% accuracy when only 8% default, so a useful model must identify risky applicants and reduce expected costs.
+Only 8.08% of the sample had payment difficulties. Predicting no payment difficulties for everyone would give 91.92% accuracy, making accuracy misleading.
 
-## 6. Risks and sensitive features
+Our validation ROC-AUC was 0.710, PR-AUC was 0.169, and KS was 0.356. These are useful
 
-*Which columns describe protected or sensitive characteristics (for example gender or
-age)? Which other columns could stand in for them? Who could be harmed by a wrong
-decision, and how?*
+6. Risks and sensitive features
 
-CODE_GENDER and DAYS_BIRTH describe sensitive characteristics, while income, occupation, and housing information could indirectly reflect them. Incorrect predictions could unfairly deny loans to reliable applicants, so we should check whether the model treats demographic groups unfairly.
+CODE_GENDER and DAYS_BIRTH describe gender and age. Family status is also sensitive. Occupation, income, and location could act as proxies for sensitive characteristics.
 
-## 7. Assumptions
+A wrong rejection could prevent someone from getting a needed loan. A wrong approval could leave a borrower with debt they cannot repay and cause losses for the lender. We should compare errors across groups before using the model for real decisions.
 
-*What are you assuming about the data, the costs, and how the model will be used? Which
-assumption, if it were wrong, would change your approach the most?*
+7. Assumptions
 
-We assume the historical data represents future applicants and that the 10:1 cost ratio reflects the lender's priorities. If the data is biased or the costs are inaccurate, the model's decisions may need to change.
+We assume the sample is reasonably representative, TARGET is a useful indicator of repayment risk, and the 10:1 costs fit the assignment. We also assume all model inputs are available when an application is evaluated and that staff review uncertain cases.
+
+The biggest concern is whether future applicants resemble this sample. If they do not, the scores and decision thresholds may not work as expected.
