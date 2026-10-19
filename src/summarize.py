@@ -42,7 +42,12 @@ def summarize_table(df: pd.DataFrame, name: str) -> dict[str, Any]:
     """
     mb_before = memory_mb(df)
     rows, cols = df.shape
-    missing_pct = float(df.isna().to_numpy().sum() / (rows * cols) * 100) if rows * cols > 0 else 0.0
+    missing_count = df.isna().to_numpy().sum()
+    missing_pct = (
+        float(missing_count / (rows * cols) * 100)
+        if rows * cols > 0
+        else 0.0
+    )
     mb_after = memory_mb(reduce_memory(df))
 
     return {
