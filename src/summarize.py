@@ -1,3 +1,5 @@
+
+
 """Summarize every sampled table: size, memory before and after shrinking dtypes, missingness.
 
 Run it with ``python run.py summary`` or ``python -m src.summarize``.
@@ -6,6 +8,7 @@ Run it with ``python run.py summary`` or ``python -m src.summarize``.
 from __future__ import annotations
 
 import argparse
+import json
 from typing import Any
 
 import pandas as pd
@@ -40,7 +43,25 @@ def summarize_table(df: pd.DataFrame, name: str) -> dict[str, Any]:
         - A table can have zero rows. Do not divide by zero.
         - Return plain Python numbers so the result can be written as JSON.
     """
-    raise NotImplementedError("TODO(student): summarize one table")
+    rows, cols = df.shape
+    mb_before = memory_mb(df)
+    smaller_df = reduce_memory(df)
+    mb_after = memory_mb(smaller_df)
+
+    missing_pct = 0.0
+    if df.size > 0:
+        missing_pct = float(df.isna().sum().sum() / df.size * 100)
+
+    return {
+        "table": name,
+        "rows": int(rows),
+        "cols": int(cols),
+        "mb_before": float(mb_before),
+        "mb_after": float(mb_after),
+        "missing_pct": missing_pct,
+    }
+
+    
 
 
 # TODO(student)
@@ -60,8 +81,21 @@ def summarize_all(config: dict[str, Any]) -> list[dict[str, Any]]:
         - The reports folder may not exist yet.
         - Load and summarize one table at a time so memory stays low.
     """
-    raise NotImplementedError("TODO(student): summarize all tables and write the report")
+    summaries = []
 
+    for name in config["tables"]:
+        df = load_table(name, config)
+        summaries.append(summarize_table(df, name))
+        del df
+
+    reports_dir = config["paths"]["reports_dir"]
+    reports_dir.mkdir(parents=True, exist_ok=True)
+
+    with (reports_dir / SUMMARY_FILENAME).open("w", encoding="utf-8") as f:
+        json.dump(summaries, f, indent=2)
+
+    
+    return summaries
 
 # PROVIDED
 def print_summary(rows: list[dict[str, Any]]) -> None:
