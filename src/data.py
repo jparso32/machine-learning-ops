@@ -56,4 +56,30 @@ def load_split(config: dict[str, Any]) -> tuple[pd.DataFrame, pd.DataFrame]:
         - Check the split file before you trust it, and fail loudly if it looks wrong.
         - Use ``config["id_col"]`` instead of typing the column name.
     """
-    raise NotImplementedError("TODO(student): load the fixed split and return (train_df, valid_df)")
+    app = load_application(config)
+    id_col = config["id_col"]
+
+    split = pd.read_csv(
+        config["paths"]["split_file"],
+        dtype={id_col: app[id_col].dtype}
+    )
+
+    if split[id_col].isna().any() or split[id_col].duplicated().any():
+        raise ValueError("Split IDs must be present and unique")
+
+    if not split["split"].isin(["train", "valid"]).all():
+        raise ValueError("Split values must be train or valid")
+
+    if app[id_col].isna().any() or app[id_col].duplicated().any():
+        raise ValueError("Application IDs must be present and unique")
+
+    if set(split[id_col]) != set(app[id_col]):
+        raise ValueError("Split IDs do not match the sample")
+
+    train_ids = split.loc[split["split"] == "train", id_col]
+    valid_ids = split.loc[split["split"] == "valid", id_col]
+
+    train_df = app.loc[app[id_col].isin(train_ids)].reset_index(drop=True)
+    valid_df = app.loc[app[id_col].isin(valid_ids)].reset_index(drop=True)
+
+    return train_df, valid_df

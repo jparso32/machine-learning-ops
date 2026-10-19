@@ -61,7 +61,7 @@ def summarize_table(df: pd.DataFrame, name: str) -> dict[str, Any]:
         "missing_pct": missing_pct,
     }
 
-    
+
 
 
 # TODO(student)
@@ -94,7 +94,7 @@ def summarize_all(config: dict[str, Any]) -> list[dict[str, Any]]:
     with (reports_dir / SUMMARY_FILENAME).open("w", encoding="utf-8") as f:
         json.dump(summaries, f, indent=2)
 
-    
+
     return summaries
 
 # PROVIDED
