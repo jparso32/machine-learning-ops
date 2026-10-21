@@ -78,6 +78,49 @@
         -0.011010529138007602,
         0.017785428048640986
       ]
+    },
+    {
+      "feature_set": "application+bureau+previous+bureau_balance",
+      "tables": [
+        "bureau",
+        "previous_application",
+        "bureau_balance"
+      ],
+      "n_features": 143,
+      "roc_auc": 0.7153911256196348,
+      "pr_auc": 0.17559031470777003,
+      "ks": 0.3672940259810046,
+      "roc_auc_ci": [
+        0.6549168620949362,
+        0.7712031135752572
+      ],
+      "delta_roc_auc": 0.005669071320141272,
+      "delta_ci": [
+        -0.010486226020752814,
+        0.02197818315474128
+      ]
+    },
+    {
+      "feature_set": "application+bureau+previous+bureau_balance+pos",
+      "tables": [
+        "bureau",
+        "previous_application",
+        "bureau_balance",
+        "POS_CASH_balance"
+      ],
+      "n_features": 149,
+      "roc_auc": 0.7210064616665995,
+      "pr_auc": 0.17544334292896843,
+      "ks": 0.3802307929982939,
+      "roc_auc_ci": [
+        0.6606858708492306,
+        0.7740177153975057
+      ],
+      "delta_roc_auc": 0.011284407367106009,
+      "delta_ci": [
+        -0.008095149413344688,
+        0.030780705735030542
+      ]
     }
   ]
 }

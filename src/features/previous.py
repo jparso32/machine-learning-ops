@@ -128,4 +128,23 @@ def aggregate_pos_cash(pos_cash: pd.DataFrame, id_col: str = "SK_ID_CURR") -> pd
           applicant (the same two-stage idea as bureau_balance).
         - Watch the denominators: POS_LATE_SHARE is over months, POS_COMPLETED_SHARE over loans.
     """
-    raise NotImplementedError("TODO(student): aggregate POS_CASH_balance per applicant")
+    require_columns(pos_cash, POS_CASH_COLUMNS, "POS_CASH_balance")
+
+    out = pos_cash.groupby(id_col).agg(
+        POS_LOAN_COUNT=("SK_ID_PREV", "nunique"),
+        POS_MONTHS_COUNT=("SK_ID_PREV", "count"),
+        POS_DPD_MAX=("SK_DPD", "max"),
+        POS_DPD_MEAN=("SK_DPD", "mean"),
+    )
+
+    keys = pos_cash[id_col]
+    out["POS_LATE_SHARE"] = share_where(pos_cash["SK_DPD"].gt(0), keys)
+
+    completed = pos_cash.groupby(["SK_ID_PREV", id_col])[
+        "NAME_CONTRACT_STATUS"
+    ].apply(lambda x: x.eq("Completed").any())
+
+    out["POS_COMPLETED_SHARE"] = completed.groupby(level=id_col).mean()
+
+    return out.reset_index()[[id_col] + POS_CASH_FEATURES]
+
