@@ -14,7 +14,7 @@ import pandas as pd
 COUNT_SUFFIX = "_COUNT"
 
 
-# TODO(student)
+
 def assert_one_row_per_applicant(
     df: pd.DataFrame, expected_ids: pd.Series, id_col: str = "SK_ID_CURR"
 ) -> None:
@@ -34,10 +34,33 @@ def assert_one_row_per_applicant(
         - Equal row counts are not enough on their own: one duplicated id plus one missing id
           keeps the count the same.
     """
-    raise NotImplementedError("TODO(student): check one row per applicant")
+    expected_count = len(expected_ids)
+    actual_count = len(df)
+
+    if actual_count != expected_count:
+        raise ValueError(
+            f"{actual_count:,} rows for {expected_count:,} applicants"
+        )
+
+    if id_col not in df.columns:
+        raise ValueError(f"Missing applicant id column: {id_col}")
+
+    if df[id_col].duplicated().any():
+        raise ValueError(f"Duplicate applicant IDs in {actual_count:,} rows")
+
+    expected_set = set(expected_ids)
+    actual_set = set(df[id_col])
+
+    if actual_set != expected_set:
+        missing = len(expected_set - actual_set)
+        unexpected = len(actual_set - expected_set)
+        raise ValueError(
+            f"Applicant IDs do not match: {missing:,} missing, "
+            f"{unexpected:,} unexpected"
+        )
 
 
-# TODO(student)
+
 def join_features(
     app: pd.DataFrame, feature_tables: dict[str, pd.DataFrame], id_col: str = "SK_ID_CURR"
 ) -> pd.DataFrame:
@@ -64,4 +87,41 @@ def join_features(
         - ``pd.merge`` has a ``validate=`` argument that can raise on duplicate keys for you.
         - Why 0 for counts but NaN for averages? Be ready to explain it at the checkpoint.
     """
-    raise NotImplementedError("TODO(student): left-join the feature tables")
+    assert_one_row_per_applicant(app, app[id_col], id_col)
+
+    result = app.copy()
+
+    for table_name, features in feature_tables.items():
+        if id_col not in features.columns:
+            raise ValueError(f"{table_name} is missing {id_col}")
+
+        if features[id_col].duplicated().any():
+            raise ValueError(
+                f"{table_name} has duplicate applicant IDs; "
+                "the table may not have been aggregated"
+            )
+
+        feature_columns = [col for col in features.columns if col != id_col]
+        conflicts = [col for col in feature_columns if col in result.columns]
+
+        if conflicts:
+            raise ValueError(
+                f"{table_name} has feature columns already present: {conflicts}"
+            )
+
+        result = result.merge(
+            features,
+            on=id_col,
+            how="left",
+            sort=False,
+            validate="one_to_one",
+        )
+
+        count_columns = [
+            col for col in feature_columns if col.endswith(COUNT_SUFFIX)
+        ]
+        result[count_columns] = result[count_columns].fillna(0)
+
+    assert_one_row_per_applicant(result, app[id_col], id_col)
+
+    return result
