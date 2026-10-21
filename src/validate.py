@@ -139,7 +139,37 @@ def application_schema() -> pa.DataFrameSchema:
           most rules. For DAYS_EMPLOYED write your own:
           ``pa.Check(lambda s: ..., error="...")`` where the lambda returns True/False per row.
     """
-    raise NotImplementedError("TODO(student): write the application_train schema")
+    columns = {
+        "SK_ID_CURR": pa.Column(nullable=False, unique=True),
+        "TARGET": pa.Column(
+            checks=pa.Check.isin([0, 1]), nullable=False
+        ),
+        "AMT_INCOME_TOTAL": pa.Column(
+            checks=pa.Check.gt(0), nullable=False
+        ),
+        "AMT_CREDIT": pa.Column(
+            checks=pa.Check.gt(0), nullable=False
+        ),
+        "AMT_ANNUITY": pa.Column(
+            checks=pa.Check.gt(0), nullable=True
+        ),
+        "AMT_GOODS_PRICE": pa.Column(
+            checks=pa.Check.gt(0), nullable=True
+        ),
+        "DAYS_BIRTH": pa.Column(
+            checks=pa.Check.lt(0), nullable=False
+        ),
+        "DAYS_EMPLOYED": pa.Column(
+            checks=pa.Check(
+                lambda s: (s.le(0) | s.eq(DAYS_EMPLOYED_SENTINEL)),
+                error="must be <= 0 or the employment sentinel",
+            ),
+            nullable=False,
+        ),
+    }
+
+    return pa.DataFrameSchema(columns)
+
 
 
 # TODO(student)
@@ -161,7 +191,62 @@ def child_schemas() -> dict[str, pa.DataFrameSchema]:
         - bureau_balance has no SK_ID_CURR; its id is SK_ID_BUREAU.
         - SK_ID_PREV repeats in the monthly tables (one row per month), so it is not unique.
     """
-    raise NotImplementedError("TODO(student): write the child table schemas")
+    return {
+        "bureau": bureau_schema(),
+        "bureau_balance": pa.DataFrameSchema({
+            **required_columns(BUREAU_BALANCE_COLUMNS),
+            "SK_ID_BUREAU": pa.Column(nullable=False),
+            "STATUS": pa.Column(
+                checks=pa.Check.isin(BUREAU_BALANCE_STATUSES),
+                nullable=True,
+            ),
+        }),
+        "previous_application": pa.DataFrameSchema({
+            **required_columns(PREVIOUS_COLUMNS),
+            "SK_ID_CURR": pa.Column(nullable=False),
+            "SK_ID_PREV": pa.Column(nullable=False),
+            "NAME_CONTRACT_STATUS": pa.Column(
+                checks=pa.Check.isin(PREVIOUS_STATUSES),
+                nullable=True,
+            ),
+        }),
+        "POS_CASH_balance": pa.DataFrameSchema({
+            **required_columns(POS_CASH_COLUMNS),
+            "SK_ID_CURR": pa.Column(nullable=False),
+            "SK_ID_PREV": pa.Column(nullable=False),
+            "SK_DPD": pa.Column(
+                checks=pa.Check.ge(0),
+                nullable=True,
+            ),
+        }),
+        "installments_payments": pa.DataFrameSchema({
+            **required_columns(INSTALLMENTS_COLUMNS),
+            "SK_ID_CURR": pa.Column(nullable=False),
+            "SK_ID_PREV": pa.Column(nullable=False),
+            "AMT_INSTALMENT": pa.Column(
+                checks=pa.Check.ge(0),
+                nullable=True,
+            ),
+            "AMT_PAYMENT": pa.Column(
+                checks=pa.Check.ge(0),
+                nullable=True,
+            ),
+        }),
+        "credit_card_balance": pa.DataFrameSchema({
+            **required_columns(CREDIT_CARD_COLUMNS),
+            "SK_ID_CURR": pa.Column(nullable=False),
+            "SK_ID_PREV": pa.Column(nullable=False),
+            "AMT_CREDIT_LIMIT_ACTUAL": pa.Column(
+                checks=pa.Check.ge(0),
+                nullable=True,
+            ),
+            "SK_DPD": pa.Column(
+                checks=pa.Check.ge(0),
+                nullable=True,
+            ),
+        }),
+    }
+
 
 
 # TODO(student)
@@ -196,7 +281,52 @@ def feature_schema(
         - A column can have several checks: ``checks=[pa.Check.ge(0), is_finite()]``.
         - Apply the missing-share limit to the suffix columns too (except ``_COUNT``).
     """
-    raise NotImplementedError("TODO(student): write the feature table schema")
+    columns = {
+        "SK_ID_CURR": pa.Column(nullable=False, unique=True),
+    }
+
+    for feature in expected_features:
+        if feature.endswith("_COUNT"):
+            columns[feature] = pa.Column(
+                checks=pa.Check.ge(0),
+                nullable=False,
+            )
+        elif feature.endswith("_SHARE") or feature.endswith("_RATE"):
+            columns[feature] = pa.Column(
+                checks=[
+                    pa.Check.ge(0),
+                    pa.Check.le(1),
+                ],
+                nullable=True,
+            )
+        elif feature.endswith("_RATIO"):
+            columns[feature] = pa.Column(
+                checks=[pa.Check.ge(0), is_finite()],
+                nullable=True,
+            )
+        else:
+            columns[feature] = pa.Column(
+                checks=max_null_share(
+                    null_limits.get(feature, null_limits["default"])
+                ),
+                nullable=True,
+            )
+
+    for column, limit in null_limits.items():
+        if column != "default" and column not in columns:
+            columns[column] = pa.Column(
+                checks=max_null_share(limit),
+                nullable=True,
+            )
+
+    return pa.DataFrameSchema(
+        columns,
+        checks=pa.Check(
+            lambda df: len(df) == n_applicants,
+            error=f"expected exactly {n_applicants} applicants",
+        ),
+    )
+
 
 
 # PROVIDED

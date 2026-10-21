@@ -104,7 +104,39 @@ def build_feature_table(tables: dict[str, pd.DataFrame], config: dict[str, Any])
           applied in the model pipeline, on the train split only; doing them here would use
           validation applicants' data and would run twice.
     """
-    raise NotImplementedError("TODO(student): build and validate the feature table")
+    validate_inputs(tables)
+
+    bureau = aggregate_bureau(tables["bureau"])
+    bureau_balance = aggregate_bureau_balance(
+        tables["bureau_balance"], tables["bureau"]
+    )
+    previous = aggregate_previous(tables["previous_application"])
+    pos_cash = aggregate_pos_cash(tables["POS_CASH_balance"])
+    installments = aggregate_installments(tables["installments_payments"])
+    credit_card = aggregate_credit_card(tables["credit_card_balance"])
+
+    features = join_features(
+    tables["application_train"],
+    {
+        "bureau": bureau,
+        "previous_application": previous,
+        "bureau_balance": bureau_balance,
+        "POS_CASH_balance": pos_cash,
+        "installments_payments": installments,
+        "credit_card_balance": credit_card,
+    },
+)
+
+    features = add_ratio_features(features)
+
+    validate_features(
+        features,
+        EXPECTED_FEATURES,
+        len(tables["application_train"]),
+        config,
+    )
+
+    return features
 
 
 # PROVIDED

@@ -72,7 +72,33 @@ def aggregate_installments(
           "on time". Make the missing rows NaN before taking a share, so they drop out.
         - ``share_where`` uses every row as the denominator. Here you need a different one.
     """
-    raise NotImplementedError("TODO(student): aggregate installments_payments per applicant")
+    require_columns(installments, INSTALLMENTS_COLUMNS, "installments_payments")
+
+    out = installments.groupby(id_col).agg(
+        INST_COUNT=("SK_ID_PREV", "count"),
+        INST_PAYMENT_DIFF_MEAN=(
+            "AMT_PAYMENT",
+            lambda x: (x - installments.loc[x.index, "AMT_INSTALMENT"]).mean(),
+        ),
+    )
+
+    paid = installments["DAYS_ENTRY_PAYMENT"].notna()
+    late_days = installments["DAYS_ENTRY_PAYMENT"] - installments["DAYS_INSTALMENT"]
+    late_days = late_days.where(paid)
+
+    late = late_days.gt(0).where(paid)
+    underpaid = (
+        installments["AMT_PAYMENT"] < installments["AMT_INSTALMENT"]
+    ).where(installments["AMT_PAYMENT"].notna())
+
+    keys = installments[id_col]
+
+    out["INST_LATE_SHARE"] = late.groupby(keys).mean()
+    out["INST_DAYS_LATE_MAX"] = late_days.clip(lower=0).groupby(keys).max().fillna(0)
+    out["INST_UNDERPAID_SHARE"] = underpaid.groupby(keys).mean()
+
+    return out.reset_index()[[id_col] + INSTALLMENTS_FEATURES]
+
 
 
 # TODO(student)
@@ -101,4 +127,20 @@ def aggregate_credit_card(
           there instead of inf, and pandas' mean and max skip NaN.
         - A balance can be slightly negative (the customer overpaid). Keep it.
     """
-    raise NotImplementedError("TODO(student): aggregate credit_card_balance per applicant")
+    require_columns(credit_card, CREDIT_CARD_COLUMNS, "credit_card_balance")
+
+    cc = credit_card.copy()
+    cc["UTILIZATION"] = safe_divide(
+        cc["AMT_BALANCE"], cc["AMT_CREDIT_LIMIT_ACTUAL"]
+    )
+
+    out = cc.groupby(id_col).agg(
+        CC_MONTHS_COUNT=("MONTHS_BALANCE", "count"),
+        CC_BALANCE_MEAN=("AMT_BALANCE", "mean"),
+        CC_UTILIZATION_MEAN=("UTILIZATION", "mean"),
+        CC_UTILIZATION_MAX=("UTILIZATION", "max"),
+        CC_DRAWINGS_MEAN=("AMT_DRAWINGS_CURRENT", "mean"),
+        CC_DPD_MAX=("SK_DPD", "max"),
+    )
+
+    return out.reset_index()[[id_col] + CREDIT_CARD_FEATURES]

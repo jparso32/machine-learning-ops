@@ -1,0 +1,14 @@
+{
+  "sample_dir": "data\\corrupt",
+  "status": "fail",
+  "stage": "input",
+  "problems": [
+    "application_train: file C:\\Users\\rithv\\machine-learning-ops\\data\\corrupt\\application_train.csv not found",
+    "bureau: file C:\\Users\\rithv\\machine-learning-ops\\data\\corrupt\\bureau.csv not found",
+    "bureau_balance: file C:\\Users\\rithv\\machine-learning-ops\\data\\corrupt\\bureau_balance.csv not found",
+    "previous_application: file C:\\Users\\rithv\\machine-learning-ops\\data\\corrupt\\previous_application.csv not found",
+    "POS_CASH_balance: file C:\\Users\\rithv\\machine-learning-ops\\data\\corrupt\\POS_CASH_balance.csv not found",
+    "installments_payments: file C:\\Users\\rithv\\machine-learning-ops\\data\\corrupt\\installments_payments.csv not found",
+    "credit_card_balance: file C:\\Users\\rithv\\machine-learning-ops\\data\\corrupt\\credit_card_balance.csv not found"
+  ]
+}
