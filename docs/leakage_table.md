@@ -83,3 +83,23 @@ In two or three sentences: name one way your feature code could leak even if eve
 above is a Yes, and how your code avoids it.
 
 Feature leakage can occur when an aggregation includes records created after the current application, even if each individual column appears reasonable. For example, `POS_COMPLETED_SHARE` could reveal future repayment behavior if it uses a loan's eventual completion status. To avoid leakage, filter historical records to those available at the application date, replace date sentinel values appropriately, exclude `TARGET` from model inputs, and fit preprocessing steps using training data only.
+
+## Installments, credit cards, and ratios
+
+| Feature                | Source table          | Available at application? | Reason                                                                                        |
+| ---------------------- | --------------------- | ------------------------- | --------------------------------------------------------------------------------------------- |
+| INST_COUNT             | installments_payments | Yes                       | Counts payment records from earlier loans that were available when the person applied.        |
+| INST_LATE_SHARE        | installments_payments | Yes                       | Uses earlier payments to find how often the person paid late.                                 |
+| INST_DAYS_LATE_MAX     | installments_payments | Yes                       | Finds the most days an earlier payment was late, using history available at application time. |
+| INST_UNDERPAID_SHARE   | installments_payments | Yes                       | Uses earlier payments to find how often the person paid less than what was due.               |
+| INST_PAYMENT_DIFF_MEAN | installments_payments | Yes                       | Finds the average difference between what was paid and what was due on earlier payments.      |
+| CC_MONTHS_COUNT        | credit_card_balance   | Yes                       | Counts credit card monthly records available before the current application.                  |
+| CC_BALANCE_MEAN        | credit_card_balance   | Yes                       | Uses earlier monthly records to find the average credit card balance.                         |
+| CC_UTILIZATION_MEAN    | credit_card_balance   | Yes                       | Finds the average balance divided by the credit limit using earlier monthly records.          |
+| CC_UTILIZATION_MAX     | credit_card_balance   | Yes                       | Finds the highest balance divided by the credit limit in the earlier monthly records.         |
+| CC_DRAWINGS_MEAN       | credit_card_balance   | Yes                       | Finds the average amount drawn from the card in earlier monthly records.                      |
+| CC_DPD_MAX             | credit_card_balance   | Yes                       | Finds the most days past due recorded in the earlier credit card history.                     |
+| CREDIT_INCOME_RATIO    | application_train     | Yes                       | The requested credit amount and reported income are known when the person applies.            |
+| ANNUITY_INCOME_RATIO   | application_train     | Yes                       | The proposed loan annuity and reported income are known when the person applies.              |
+| CREDIT_GOODS_RATIO     | application_train     | Yes                       | The credit amount and goods price are known when the person applies.                          |
+| ANNUITY_CREDIT_RATIO   | application_train     | Yes                       | The proposed loan annuity and credit amount are known when the person applies.                |

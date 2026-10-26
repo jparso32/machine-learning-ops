@@ -62,17 +62,17 @@ You need Python 3.11, Git, and a Kaggle account with the
 
 `requirements.txt` lists the packages the project needs, with minimum versions:
 
-| Package | Used for |
-|---|---|
-| pandas | Reading and summarizing the tables |
-| numpy | Numbers and the seeded random sampling |
+| Package      | Used for                                              |
+| ------------ | ----------------------------------------------------- |
+| pandas       | Reading and summarizing the tables                    |
+| numpy        | Numbers and the seeded random sampling                |
 | scikit-learn | The pipeline, logistic regression, ROC-AUC and PR-AUC |
-| pyyaml | Reading `config/config.yaml` |
-| pytest | Running the tests (`python run.py test`) |
-| ruff | Checking code style (`python run.py lint`) |
-| jupyter | Running the EDA notebook |
-| matplotlib | Plots in the notebook |
-| kaggle | Downloading the data from the command line |
+| pyyaml       | Reading `config/config.yaml`                          |
+| pytest       | Running the tests (`python run.py test`)              |
+| ruff         | Checking code style (`python run.py lint`)            |
+| jupyter      | Running the EDA notebook                              |
+| matplotlib   | Plots in the notebook                                 |
+| kaggle       | Downloading the data from the command line            |
 
 If you need another package, add it to `requirements.txt` so your teammates get it too.
 
@@ -85,11 +85,11 @@ never send it to anyone, upload it, or commit it. `data/` is already in `.gitign
    [competition rules](https://www.kaggle.com/c/home-credit-default-risk/rules). If you skip
    this, the download fails with a 403 error. Kaggle may ask new accounts to verify a phone number.
 2. **Download.** Choose one:
-   - *Command line* (installed by `python run.py setup`): with your token in place (Setup, step 1), run
+   - _Command line_ (installed by `python run.py setup`): with your token in place (Setup, step 1), run
      ```bash
      kaggle competitions download -c home-credit-default-risk -p data/raw
      ```
-   - *Browser*: on the competition's Data tab, click **Download All**, then move
+   - _Browser_: on the competition's Data tab, click **Download All**, then move
      `home-credit-default-risk.zip` into `data/raw/`.
 3. **Unzip** into `data/raw/`. This command works on every operating system:
    ```bash
@@ -109,16 +109,16 @@ Run everything from the repository root with `run.py`. Type `python run.py` alon
 commands. Each command prints the plain `python -m ...` command it runs, so you can always run
 that yourself instead.
 
-| Command | Plain equivalent | What it does |
-|---|---|---|
-| `python run.py setup` | `python -m venv .venv`, then `pip install -r requirements.txt` | Create the environment |
-| `python run.py sample` | `python -m scripts.make_sample` | Build `data/sample/` (5,000 applicants, all 7 tables) |
-| `python run.py summary` | `python -m src.summarize` | Write `reports/table_summary.json` |
-| `python run.py baseline` | `python -m src.baseline` | Train, evaluate, write `reports/metrics.json` |
-| `python run.py test` | `python -m pytest` | Run the tests |
-| `python run.py lint` | `python -m ruff check .` | Style check (line length 100) |
-| `python run.py check` | `python -m scripts.check_week1` | Pass/fail table for the checkpoints |
-| `python run.py all` | the four commands in order | Sample (if missing), summary, baseline, check |
+| Command                  | Plain equivalent                                               | What it does                                          |
+| ------------------------ | -------------------------------------------------------------- | ----------------------------------------------------- |
+| `python run.py setup`    | `python -m venv .venv`, then `pip install -r requirements.txt` | Create the environment                                |
+| `python run.py sample`   | `python -m scripts.make_sample`                                | Build `data/sample/` (5,000 applicants, all 7 tables) |
+| `python run.py summary`  | `python -m src.summarize`                                      | Write `reports/table_summary.json`                    |
+| `python run.py baseline` | `python -m src.baseline`                                       | Train, evaluate, write `reports/metrics.json`         |
+| `python run.py test`     | `python -m pytest`                                             | Run the tests                                         |
+| `python run.py lint`     | `python -m ruff check .`                                       | Style check (line length 100)                         |
+| `python run.py check`    | `python -m scripts.check_week1`                                | Pass/fail table for the checkpoints                   |
+| `python run.py all`      | the four commands in order                                     | Sample (if missing), summary, baseline, check         |
 
 Useful options:
 
@@ -215,11 +215,15 @@ The tagged repo must contain:
 
 ## Troubleshooting
 
-| Problem | Fix |
-|---|---|
-| Kaggle download fails with 403 | Accept the [competition rules](https://www.kaggle.com/c/home-credit-default-risk/rules) while logged in, then retry. |
-| Kaggle says it cannot find your credentials (401) | Put `kaggle.json` in `~/.kaggle/` (see Setup), or create a new token. |
-| `python: command not found` (macOS/Linux) | Use `python3` instead, or activate `.venv` first. |
-| "data/sample already exists" | Add `--force` to rebuild it. |
-| Sample hash mismatch in `python run.py check` | Restore `scripts/make_sample.py` and `config/config.yaml` from the template, then `python run.py sample --force`. |
-| Tests fail with `NotImplementedError` | Expected until you write that TODO. |
+| Problem                                           | Fix                                                                                                                  |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Kaggle download fails with 403                    | Accept the [competition rules](https://www.kaggle.com/c/home-credit-default-risk/rules) while logged in, then retry. |
+| Kaggle says it cannot find your credentials (401) | Put `kaggle.json` in `~/.kaggle/` (see Setup), or create a new token.                                                |
+| `python: command not found` (macOS/Linux)         | Use `python3` instead, or activate `.venv` first.                                                                    |
+| "data/sample already exists"                      | Add `--force` to rebuild it.                                                                                         |
+| Sample hash mismatch in `python run.py check`     | Restore `scripts/make_sample.py` and `config/config.yaml` from the template, then `python run.py sample --force`.    |
+| Tests fail with `NotImplementedError`             | Expected until you write that TODO.                                                                                  |
+
+## Week 2 feature comparison
+
+Previous applications, bureau balance, POS cash, and credit card history helped improve the ROC-AUC as we added them. Bureau features lowered the score, installments barely changed it, and adding the ratios lowered it a little. The best score was about 0.725 with credit card history, compared to about 0.710 with just the application data. All the 95% intervals for the changes compared to the baseline include zero, so we cant say for sure that the improvements are reliable. Since we only have 81 defaults out of 1,000 validation applicants, we would need more data to be more confident.

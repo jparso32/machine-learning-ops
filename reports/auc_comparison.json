@@ -22,7 +22,7 @@
       ]
     },
     {
-      "feature_set": "application+bureau",
+      "feature_set": "+bureau",
       "tables": [
         "bureau"
       ],
@@ -41,26 +41,7 @@
       ]
     },
     {
-      "feature_set": "application+previous",
-      "tables": [
-        "previous_application"
-      ],
-      "n_features": 129,
-      "roc_auc": 0.7161299856258143,
-      "pr_auc": 0.17922903324290873,
-      "ks": 0.36147718265962725,
-      "roc_auc_ci": [
-        0.6554353310927323,
-        0.7733345232401905
-      ],
-      "delta_roc_auc": 0.0064079313263207816,
-      "delta_ci": [
-        -0.0060328146370955986,
-        0.019598671128130515
-      ]
-    },
-    {
-      "feature_set": "application+bureau+previous",
+      "feature_set": "+previous_application",
       "tables": [
         "bureau",
         "previous_application"
@@ -80,7 +61,7 @@
       ]
     },
     {
-      "feature_set": "application+bureau+previous+bureau_balance",
+      "feature_set": "+bureau_balance",
       "tables": [
         "bureau",
         "previous_application",
@@ -101,7 +82,7 @@
       ]
     },
     {
-      "feature_set": "application+bureau+previous+bureau_balance+pos",
+      "feature_set": "+POS_CASH",
       "tables": [
         "bureau",
         "previous_application",
@@ -120,6 +101,78 @@
       "delta_ci": [
         -0.008095149413344688,
         0.030780705735030542
+      ]
+    },
+    {
+      "feature_set": "+installments",
+      "tables": [
+        "bureau",
+        "previous_application",
+        "bureau_balance",
+        "POS_CASH_balance",
+        "installments_payments"
+      ],
+      "n_features": 154,
+      "roc_auc": 0.7207377853007161,
+      "pr_auc": 0.1736741510719083,
+      "ks": 0.36762987143835896,
+      "roc_auc_ci": [
+        0.6660812704575316,
+        0.7751651335222769
+      ],
+      "delta_roc_auc": 0.01101573100122255,
+      "delta_ci": [
+        -0.016342933605679,
+        0.039500938073663464
+      ]
+    },
+    {
+      "feature_set": "+credit_card",
+      "tables": [
+        "bureau",
+        "previous_application",
+        "bureau_balance",
+        "POS_CASH_balance",
+        "installments_payments",
+        "credit_card_balance"
+      ],
+      "n_features": 160,
+      "roc_auc": 0.7248485336987331,
+      "pr_auc": 0.17902576212987506,
+      "ks": 0.3697658485471325,
+      "roc_auc_ci": [
+        0.6689620183869645,
+        0.7824670437297692
+      ],
+      "delta_roc_auc": 0.015126479399239612,
+      "delta_ci": [
+        -0.012914478847997776,
+        0.045534571653926416
+      ]
+    },
+    {
+      "feature_set": "+ratios",
+      "tables": [
+        "bureau",
+        "previous_application",
+        "bureau_balance",
+        "POS_CASH_balance",
+        "installments_payments",
+        "credit_card_balance",
+        "ratios"
+      ],
+      "n_features": 164,
+      "roc_auc": 0.7244320853316139,
+      "pr_auc": 0.18430828632283378,
+      "ks": 0.387888069425973,
+      "roc_auc_ci": [
+        0.6674861084649661,
+        0.7806701979289071
+      ],
+      "delta_roc_auc": 0.014710031032120319,
+      "delta_ci": [
+        -0.014805824540074277,
+        0.046310674061408104
       ]
     }
   ]

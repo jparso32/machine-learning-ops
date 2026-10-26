@@ -253,34 +253,6 @@ def child_schemas() -> dict[str, pa.DataFrameSchema]:
 def feature_schema(
     expected_features: list[str], n_applicants: int, null_limits: dict[str, float]
 ) -> pa.DataFrameSchema:
-    """Rules for the finished feature table (the output of ``build_feature_table``).
-
-    Args:
-        expected_features: Every engineered feature column the table must have.
-        n_applicants: How many rows the table must have (one per applicant).
-        null_limits: Largest allowed share of missing values, by column name, with a
-            ``"default"`` entry for every expected feature not listed by name. Columns listed
-            by name are checked even if they are not engineered features (for example
-            AMT_CREDIT).
-
-    Rules:
-
-    - SK_ID_CURR: never missing, unique
-    - every expected feature exists
-    - names ending in ``_COUNT``: 0 or above, never missing (the join fills 0)
-    - names ending in ``_SHARE`` or ``_RATE``: between 0 and 1 (may be missing)
-    - names ending in ``_RATIO``: 0 or above and finite (no inf)
-    - every other expected feature, and every column named in ``null_limits``: its missing
-      share is at most its limit (``max_null_share``)
-    - the whole table: exactly ``n_applicants`` rows (a ``pa.Check`` on the DataFrameSchema
-      itself, through its ``checks=`` argument)
-
-    Hints:
-        - Build a dict {column: pa.Column(...)} in a loop over ``expected_features``, then
-          add the columns that are only in ``null_limits``.
-        - A column can have several checks: ``checks=[pa.Check.ge(0), is_finite()]``.
-        - Apply the missing-share limit to the suffix columns too (except ``_COUNT``).
-    """
     columns = {
         "SK_ID_CURR": pa.Column(nullable=False, unique=True),
     }
@@ -291,26 +263,17 @@ def feature_schema(
                 checks=pa.Check.ge(0),
                 nullable=False,
             )
-        elif feature.endswith("_SHARE") or feature.endswith("_RATE"):
-            columns[feature] = pa.Column(
-                checks=[
-                    pa.Check.ge(0),
-                    pa.Check.le(1),
-                ],
-                nullable=True,
-            )
+            continue
+
+        limit = null_limits.get(feature, null_limits["default"])
+        checks = [max_null_share(limit)]
+
+        if feature.endswith(("_SHARE", "_RATE")):
+            checks.extend([pa.Check.ge(0), pa.Check.le(1)])
         elif feature.endswith("_RATIO"):
-            columns[feature] = pa.Column(
-                checks=[pa.Check.ge(0), is_finite()],
-                nullable=True,
-            )
-        else:
-            columns[feature] = pa.Column(
-                checks=max_null_share(
-                    null_limits.get(feature, null_limits["default"])
-                ),
-                nullable=True,
-            )
+            checks.extend([pa.Check.ge(0), is_finite()])
+
+        columns[feature] = pa.Column(checks=checks, nullable=True)
 
     for column, limit in null_limits.items():
         if column != "default" and column not in columns:
