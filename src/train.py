@@ -102,6 +102,45 @@ def train_and_log(
 
 # TODO(student)
 def tune_tree(data: TrainingData, config: dict[str, Any]) -> dict[str, Any]:
+    grid = config["week3"]["tree_grid"]
+    best_score = float("-inf")
+    best_spec = None
+    tags = run_tags(config, data.data_version, "tree grid search")
+
+    with mlflow.start_run(run_name="tree_tuning", tags=tags):
+        for depth, leaf in itertools.product(
+            grid["max_depth"], grid["min_samples_leaf"]
+        ):
+            spec = {
+                "model": "decision_tree",
+                "params": {
+                    "max_depth": depth,
+                    "min_samples_leaf": leaf,
+                },
+            }
+
+            result = train_and_log(
+                f"tree_d{depth}_l{leaf}",
+                spec,
+                data,
+                config,
+                nested=True,
+                log_model=False,
+            )
+
+            if result["cv_auc_mean"] > best_score:
+                best_score = result["cv_auc_mean"]
+                best_spec = spec
+
+        mlflow.log_params({
+            "best_max_depth": best_spec["params"]["max_depth"],
+            "best_min_samples_leaf": best_spec["params"]["min_samples_leaf"],
+        })
+        mlflow.log_metric("best_cv_auc_mean", best_score)
+
+    return train_and_log(
+        TUNED_TREE, best_spec, data, config, log_model=True
+    )
     """Grid-search the decision tree's max_depth and min_samples_leaf with stratified CV.
 
     1. Open ONE parent run named "tree_tuning" (tags from ``run_tags``).

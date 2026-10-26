@@ -30,6 +30,32 @@ def cross_validate_auc(
     model: Pipeline, X: pd.DataFrame, y: pd.Series, n_folds: int, seed: int,
     undersample_ratio: float | None = None,
 ) -> dict[str, Any]:
+    folds = StratifiedKFold(
+        n_splits=n_folds, shuffle=True, random_state=seed
+    )
+    fold_aucs = []
+    oof = np.full(len(y), np.nan)
+
+    for train_idx, valid_idx in folds.split(X, y):
+        fold_model = clone(model)
+        fit_model(
+            fold_model,
+            X.iloc[train_idx],
+            y.iloc[train_idx],
+            undersample_ratio,
+            seed,
+        )
+
+        scores = fold_model.predict_proba(X.iloc[valid_idx])[:, 1]
+        oof[valid_idx] = scores
+        fold_aucs.append(float(roc_auc_score(y.iloc[valid_idx], scores)))
+
+    return {
+        "fold_aucs": fold_aucs,
+        "mean": float(np.mean(fold_aucs)),
+        "std": float(np.std(fold_aucs)),
+        "oof": oof,
+    }
     """Stratified k-fold ROC-AUC, plus an out-of-fold score for every row.
 
     For each of ``n_folds`` stratified folds (shuffled with ``random_state=seed``): fit a

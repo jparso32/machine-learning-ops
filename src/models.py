@@ -49,6 +49,25 @@ def make_model(
     spec: dict[str, Any], numeric_cols: list[str], categorical_cols: list[str],
     config: dict[str, Any],
 ) -> Pipeline:
+    name = spec["model"]
+
+    if name == "logistic_regression":
+        return build_model(config, build_preprocessor(numeric_cols, categorical_cols))
+
+    params = dict(spec.get("params") or {})
+    params["random_state"] = config["seed"]
+
+    if name == "decision_tree":
+        model = DecisionTreeClassifier(**params)
+    elif name == "hist_gradient_boosting":
+        model = HistGradientBoostingClassifier(**params)
+    else:
+        raise ValueError(f"Unknown model '{name}'. Choose from: {sorted(MODEL_NAMES)}")
+
+    return Pipeline([
+        ("preprocess", tree_preprocessor(numeric_cols, categorical_cols)),
+        ("model", model),
+    ])
     """Build the unfitted Pipeline described by ``spec``.
 
     - ``logistic_regression``: YOUR Week 1 pipeline (already written below; read it).
@@ -77,16 +96,26 @@ def make_model(
           a branch that imports it inside this function (``lightgbm.LGBMClassifier`` with
           ``verbose=-1``, or ``xgboost.XGBClassifier``).
     """
-    name = spec["model"]
-    if name == "logistic_regression":
-        return build_model(config, build_preprocessor(numeric_cols, categorical_cols))
-    raise NotImplementedError("TODO(student): build the decision tree and boosting pipelines")
+    
 
 
 # TODO(student)
 def undersample(
     X: pd.DataFrame, y: pd.Series, ratio: float, seed: int
 ) -> tuple[pd.DataFrame, pd.Series]:
+    labels = y.to_numpy()
+    pos = np.flatnonzero(labels == 1)
+    neg = np.flatnonzero(labels == 0)
+
+    rng = np.random.default_rng(seed)
+    count = min(len(neg), int(len(pos) * ratio))
+    selected = rng.choice(neg, size=count, replace=False)
+    keep = np.sort(np.concatenate([pos, selected]))
+
+    return (
+        X.iloc[keep].reset_index(drop=True),
+        y.iloc[keep].reset_index(drop=True),
+    )
     """Keep every defaulter and a random ``ratio`` non-defaulters per defaulter.
 
     With 320 defaulters and ratio 3, the result has 320 defaulters and 960 non-defaulters.
@@ -109,8 +138,7 @@ def undersample(
         - Only ever call this on TRAINING rows. ``fit_model`` and your
           ``cross_validate_auc`` make sure of that: never undersample a validation fold.
     """
-    raise NotImplementedError("TODO(student): keep all defaulters and ratio x as many others")
-
+    
 
 # PROVIDED
 def fit_model(
