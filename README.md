@@ -227,3 +227,78 @@ The tagged repo must contain:
 ## Week 2 feature comparison
 
 Previous applications, bureau balance, POS cash, and credit card history helped improve the ROC-AUC as we added them. Bureau features lowered the score, installments barely changed it, and adding the ratios lowered it a little. The best score was about 0.725 with credit card history, compared to about 0.710 with just the application data. All the 95% intervals for the changes compared to the baseline include zero, so we cant say for sure that the improvements are reliable. Since we only have 81 defaults out of 1,000 validation applicants, we would need more data to be more confident.
+
+## Week 3: Models and MLflow
+
+Monday's checkpoint passed all required checks. We trained logistic regression,
+decision trees, and boosting models using stratified 5-fold cross-validation.
+
+### View the saved results
+
+Open [reports/mlflow_runs.csv](reports/mlflow_runs.csv) on GitHub to see the
+exported experiment results without running anything.
+
+| Model           | CV AUC | Train AUC |
+| --------------- | ------ | --------- |
+| baseline_lr     | 0.723  | 0.845     |
+| tree_unlimited  | 0.542  | 1.000     |
+| tree_tuned      | 0.697  | 0.782     |
+| hgb_default     | 0.725  | 1.000     |
+| hgb_balanced    | 0.713  | 1.000     |
+| hgb_undersample | 0.722  | 0.999     |
+| hgb_l2          | 0.732  | 1.000     |
+
+The best boosting run was hgb_l2. Its improvement over the baseline was
+smaller than its fold standard deviation, so the gain is uncertain.
+The unlimited tree strongly overfit. Tuning selected max_depth=5 and
+min_samples_leaf=50 from 30 combinations.
+
+### Open the MLflow website locally
+
+From the repository folder, pull the latest code and install dependencies:
+
+```powershell
+git pull
+python run.py setup
+.\.venv\Scripts\Activate.ps1
+```
+
+Each teammate needs their own data downloaded using the instructions above.
+If the sample or feature table is missing, build them:
+
+```powershell
+python run.py sample
+python run.py features
+```
+
+Train the experiments to populate your local MLflow database:
+
+```powershell
+python run.py train baseline_lr tree_unlimited hgb_default tree_tuned hgb_balanced hgb_undersample hgb_l2
+```
+
+Start the website:
+
+```powershell
+python run.py ui
+```
+
+Open http://127.0.0.1:5050 and select credit-risk-week3, then Training runs.
+Show cv_auc_mean, cv_auc_std, and train_auc under Columns → Metrics.
+Sort by cv_auc_mean descending and expand tree_tuning to see its 30 trials.
+
+Keep the terminal running while using the website. Press Ctrl+C to stop it.
+
+This address only works on the computer running MLflow. The MLflow database
+and model artifacts are local and are not included in GitHub. The exported
+CSV above contains the shared results.
+
+### Check and export
+
+```powershell
+python run.py check --stage mon
+python run.py runs
+```
+
+Before Wednesday: add two more boosting variations and complete the
+experiment notes.
