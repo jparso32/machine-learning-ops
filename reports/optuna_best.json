@@ -1,0 +1,14 @@
+{
+  "study": "hgb-tuning",
+  "trial": 12,
+  "cv_auc_mean": 0.7466043070865469,
+  "n_trials": 15,
+  "params": {
+    "learning_rate": 0.01551113265940563,
+    "max_iter": 250,
+    "max_leaf_nodes": 10,
+    "min_samples_leaf": 130,
+    "l2_regularization": 0.0024595597978347293,
+    "max_features": 0.7363245749007997
+  }
+}

@@ -61,7 +61,16 @@ def expected_cost(
         - ``y = np.asarray(y_true)``, ``reject = np.asarray(scores) >= threshold``.
         - Approved defaulters: ``(y == 1) & ~reject``. Rejected good: ``(y == 0) & reject``.
     """
-    raise NotImplementedError("TODO(student): the expected cost per applicant")
+    y = np.asarray(y_true)
+    reject = np.asarray(scores) >= threshold
+    approved_defaulters = np.count_nonzero((y == 1) & ~reject)
+    rejected_good = np.count_nonzero((y == 0) & reject)
+
+    total = (
+        approved_defaulters * costs["approve_defaulter"]
+        + rejected_good * costs["reject_good"]
+    )
+    return float(total / len(y))
 
 
 # TODO(student)
@@ -75,7 +84,24 @@ def cost_curve(
         ``reject_rate`` (share of applicants rejected), ``approved_defaulters`` and
         ``rejected_good`` (counts).
     """
-    raise NotImplementedError("TODO(student): one row per threshold")
+    y = np.asarray(y_true)
+    scores = np.asarray(scores)
+    rows = []
+
+    for threshold in thresholds:
+        reject = scores >= threshold
+        rows.append({
+            "threshold": float(threshold),
+            "expected_cost": expected_cost(y, scores, threshold, costs),
+            "reject_rate": float(np.mean(reject)),
+            "approved_defaulters": int(np.count_nonzero((y == 1) & ~reject)),
+            "rejected_good": int(np.count_nonzero((y == 0) & reject)),
+        })
+
+    return pd.DataFrame(rows, columns=[
+        "threshold", "expected_cost", "reject_rate",
+        "approved_defaulters", "rejected_good",
+    ])
 
 
 # TODO(student)
@@ -91,7 +117,10 @@ def choose_threshold(curve: pd.DataFrame) -> float:
     Returns:
         The chosen threshold, as a plain float.
     """
-    raise NotImplementedError("TODO(student): the cheapest threshold")
+    minimum = curve["expected_cost"].min()
+    return float(
+        curve.loc[curve["expected_cost"] == minimum, "threshold"].max()
+    )
 
 
 # PROVIDED
