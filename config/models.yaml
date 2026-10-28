@@ -29,11 +29,9 @@ runs:
   hgb_l2:
     model: hist_gradient_boosting
     params: {l2_regularization: 1.0}
-
   hgb_lr003:
     model: hist_gradient_boosting
     params: {learning_rate: 0.03}
-
   hgb_leaf15:
     model: hist_gradient_boosting
     params: {max_leaf_nodes: 15}
