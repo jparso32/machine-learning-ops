@@ -96,8 +96,6 @@ def make_model(
           a branch that imports it inside this function (``lightgbm.LGBMClassifier`` with
           ``verbose=-1``, or ``xgboost.XGBClassifier``).
     """
-    
-
 
 # TODO(student)
 def undersample(
@@ -138,7 +136,6 @@ def undersample(
         - Only ever call this on TRAINING rows. ``fit_model`` and your
           ``cross_validate_auc`` make sure of that: never undersample a validation fold.
     """
-    
 
 # PROVIDED
 def fit_model(

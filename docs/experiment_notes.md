@@ -26,7 +26,11 @@ Each boosting variation changes one setting from hgb_default.
 | hgb_leaf15 | max_leaf_nodes=15 | 0.7186 +/- 0.0324 | 0.9996 | 0.7381 [0.6804, 0.7909] |
 | hgb_undersample | Keep 3 non-defaulters per defaulter during training | 0.7217 +/- 0.0245 | 0.9987 | 0.7550 [0.6973, 0.8089] |
 | hgb_balanced | class_weight=balanced | 0.7125 +/- 0.0446 | 1.0000 | 0.7262 [0.6656, 0.7826] |
-
+| hgb_maxfeatures07 | max_features=0.7 | 0.7252 +/- 0.0373 | 1.0000 | 0.7116 [0.6570, 0.7678] |
+| hgb_minleaf20 | min_samples_leaf=20 | 0.7251 +/- 0.0390 | 1.0000 | 0.6968 [0.6358, 0.7597] |
+| hgb_leaf31 | max_leaf_nodes=31 | 0.7251 +/- 0.0390 | 1.0000 | 0.6968 [0.6358, 0.7597] |
+| hgb_depth5 | max_depth=5 | 0.7096 +/- 0.0333 | 0.9993 | 0.7103 [0.6572, 0.7634] |
+| hgb_maxiter200 | max_iter=200 | 0.7187 +/- 0.0411 | 1.0000 | 0.6935 [0.6353, 0.7527] |
 ## Overfitting
 
 tree_unlimited reached a training AUC of 1.0000 but a CV AUC of only 0.5423,
