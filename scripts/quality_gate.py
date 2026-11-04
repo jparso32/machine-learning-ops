@@ -32,6 +32,28 @@ THRESHOLDS = ("min_auc", "max_cost", "max_auc_drop", "allow_failing_model_tests"
 def gate_failures(
     metrics: dict[str, Any], baseline_auc: float, thresholds: dict[str, Any]
 ) -> list[str]:
+    auc = metrics["valid_auc"]
+    cost = metrics["cost_at_threshold"]
+    failed_tests = metrics["model_tests"]["failed"]
+    min_auc = thresholds["min_auc"]
+    max_cost = thresholds["max_cost"]
+    max_auc_drop = thresholds["max_auc_drop"]
+    allowed_failures = thresholds["allow_failing_model_tests"]
+
+    failures = []
+    if auc < min_auc:
+        failures.append(f"Validation AUC {auc:.3f} is below the floor {min_auc:.3f}.")
+    if cost > max_cost:
+        failures.append(f"Cost {cost:.3f} is above the limit {max_cost:.3f}.")
+    if auc < baseline_auc - max_auc_drop:
+        failures.append(
+            f"Validation AUC {auc:.3f} is more than {max_auc_drop:.3f} below "
+            f"the registered model's AUC of {baseline_auc:.3f}."
+        )
+    if failed_tests > allowed_failures:
+        failures.append(f"{failed_tests} model tests failed, limit {allowed_failures}.")
+
+    return failures
     """Every reason the candidate model must not be merged; an empty list means it passes.
 
     Check, and add one plain-language reason per broken rule:
