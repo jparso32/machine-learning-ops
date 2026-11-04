@@ -56,3 +56,19 @@ say which test you expected to be the most likely to fail, and why.
 - **Why:** Increasing income also changes income-dependent ratio features through `change_income(X, 1.5)`. The model may assign risk-increasing effects to these ratios or their interactions with other features. The exact cause needs to be verified by examining the changed features and the predictions of the affected applicants.
 - **Does it matter for the lender?** Yes. Applicants with higher incomes could be assigned greater predicted default risk despite all other underlying characteristics remaining unchanged, potentially leading to unfair or inconsistent lending decisions.
 - **Decision:** Kept as a known failure pending investigation. The test should be marked with `@pytest.mark.xfail(strict=True, reason="see docs/test_findings.md")` only if the team explicitly accepts the failure temporarily. Inspect the affected predictions and income-dependent features, then consider retraining or applying a monotonic constraint so higher income cannot increase predicted risk. Retest the model before treating the issue as resolved.
+
+
+
+## Decisions on Known Model Test Failures
+
+### test_gender_does_not_change_the_score
+
+- **Decision:** Kept as a known failure using `@pytest.mark.xfail(strict=True, reason="see docs/test_findings.md")`.
+- **Reason:** Changing only gender caused a maximum score difference of 0.102748, exceeding the allowed 0.01. This indicates that gender affects the model's predictions. The issue is being documented rather than hiding it by changing the test.
+- **Future action:** Investigate the influence of gender and potential proxy features. The model must be updated and the test must pass before this issue can be considered resolved.
+
+### test_higher_income_does_not_raise_risk
+
+- **Decision:** Kept as a known failure using `@pytest.mark.xfail(strict=True, reason="see docs/test_findings.md")`.
+- **Reason:** Increasing income by 50% caused 24 applicants to receive higher risk scores. The largest increase was 0.083670, exceeding the allowed 0.001. This violates the expected relationship between income and predicted risk.
+- **Future action:** Investigate income-related ratio features and their influence on predictions. Consider retraining with appropriate monotonic constraints and retest before considering the issue resolved.
