@@ -49,4 +49,6 @@ runs:
   # max_depth, min_samples_leaf, l2_regularization, max_features, early_stopping.
   # Give each run a name that says what changed, for example hgb_lr003.
 
+  # Week 4 demo: trigger the stale-metrics check.
+
     
