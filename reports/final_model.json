@@ -1,5 +1,5 @@
 {
-  "run_id": "d75b80bdc0144c2c9e2eec98f1f4009c",
+  "run_id": "cc1b524882ad4d9c8b5f46c005f799d8",
   "model": {
     "model": "hist_gradient_boosting",
     "params": {
@@ -242,5 +242,21 @@
     "version": "1",
     "alias": "staging",
     "uri": "models:/credit-risk@staging"
+  },
+  "artifact_rebuild": {
+    "created": "2026-11-13T19:03:01+00:00",
+    "source_commit": "429c09b4b615a985774b58fcc8bd47955be60d79",
+    "source_run_id": "d75b80bdc0144c2c9e2eec98f1f4009c",
+    "reason": "Original serialized artifact was unavailable locally; refitted the same specification, calibration, fixed split and seed.",
+    "verified_against_recorded": {
+      "valid_auc": 0.735588871424925,
+      "brier": 0.06912588905861625,
+      "mean_predicted": 0.0809324475181356,
+      "cost_at_threshold": 0.564,
+      "cost_at_0.5": 0.8,
+      "cost_approve_all": 0.81,
+      "cost_reject_all": 0.919,
+      "reject_rate": 0.271
+    }
   }
 }

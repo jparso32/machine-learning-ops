@@ -1,0 +1,95 @@
+{
+  "health": {
+    "method": "GET",
+    "path": "/health",
+    "request": null,
+    "status": 200,
+    "response": {
+      "status": "ok",
+      "model_loaded": true,
+      "model_version": "1"
+    }
+  },
+  "model_info": {
+    "method": "GET",
+    "path": "/model-info",
+    "request": null,
+    "status": 200,
+    "response": {
+      "name": "credit-risk",
+      "version": "1",
+      "threshold": 0.085,
+      "n_features": 164,
+      "valid_auc": 0.735588871424925,
+      "data_version": "c393a114d6e3",
+      "exported": "2026-11-13T19:03:41+00:00"
+    }
+  },
+  "valid": {
+    "method": "POST",
+    "path": "/predict",
+    "request": {
+      "SK_ID_CURR": 100021
+    },
+    "status": 200,
+    "response": {
+      "SK_ID_CURR": 100021,
+      "probability": 0.10431654676258995,
+      "decision": "reject",
+      "threshold": 0.085,
+      "model_version": "1"
+    }
+  },
+  "updated_income": {
+    "method": "POST",
+    "path": "/predict",
+    "request": {
+      "SK_ID_CURR": 100021,
+      "AMT_INCOME_TOTAL": 50000.0
+    },
+    "status": 200,
+    "response": {
+      "SK_ID_CURR": 100021,
+      "probability": 0.10431654676258995,
+      "decision": "reject",
+      "threshold": 0.085,
+      "model_version": "1"
+    }
+  },
+  "invalid": {
+    "method": "POST",
+    "path": "/predict",
+    "request": {
+      "SK_ID_CURR": 100021,
+      "AMT_INCOME_TOTAL": -1
+    },
+    "status": 422,
+    "response": {
+      "detail": [
+        {
+          "type": "greater_than",
+          "loc": [
+            "body",
+            "AMT_INCOME_TOTAL"
+          ],
+          "msg": "Input should be greater than 0",
+          "input": -1,
+          "ctx": {
+            "gt": 0.0
+          }
+        }
+      ]
+    }
+  },
+  "unknown": {
+    "method": "POST",
+    "path": "/predict",
+    "request": {
+      "SK_ID_CURR": 1
+    },
+    "status": 404,
+    "response": {
+      "detail": "Applicant 1 is not in the feature store"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "url": "http://127.0.0.1:8045",
+  "first_request_ms": 62.5,
+  "errors": 0,
+  "n": 100,
+  "p50_ms": 9.613687492674217,
+  "p95_ms": 10.31846184632741,
+  "max_ms": 14.468875015154481,
+  "mean_ms": 9.730915807303973,
+  "created": "2026-11-13T19:05:32+00:00",
+  "measurement_scope": "Local HTTP service; excludes model startup and is not a Cloud Run cold-start measurement."
+}
