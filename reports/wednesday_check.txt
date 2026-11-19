@@ -1,0 +1,9 @@
+$ python -m scripts.check_week6 --stage wed
+check           result details
+------------------------------------------------------------------------------------------
+wed tests       PASS   6 passed in 6.24s
+explanations    PASS   3 declined applicants explained; top features EXT_SOURCE_2, EXT_SOURCE_3, EXT_SOURCE_1
+fairness table  PASS   approval by gender: F 77%, M 66%; proxy AUC 0.86
+git authors     INFO   3 distinct commit author(s)
+------------------------------------------------------------------------------------------
+All required checks passed.
