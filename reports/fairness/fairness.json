@@ -1,0 +1,167 @@
+{
+  "model_version": "1",
+  "threshold": 0.085,
+  "data": "validation set",
+  "n": 1000,
+  "n_features": 164,
+  "groups": {
+    "gender": [
+      {
+        "group": "F",
+        "n": 669,
+        "n_default": 38,
+        "n_good": 631,
+        "approval_rate": 0.7653213751868461,
+        "default_rate": 0.05680119581464873,
+        "mean_score": 0.07243183108096445,
+        "tpr": 0.6052631578947368,
+        "fpr": 0.21236133122028525,
+        "approval_rate_lo": 0.7317479786649665,
+        "approval_rate_hi": 0.7958650583410689,
+        "tpr_lo": 0.4471758699869596,
+        "tpr_hi": 0.7440214073638108,
+        "fpr_lo": 0.18223986866691594,
+        "fpr_hi": 0.24596395414494765,
+        "note": ""
+      },
+      {
+        "group": "M",
+        "n": 331,
+        "n_default": 43,
+        "n_good": 288,
+        "approval_rate": 0.6555891238670695,
+        "default_rate": 0.1299093655589124,
+        "mean_score": 0.09811345173707062,
+        "tpr": 0.5581395348837209,
+        "fpr": 0.3125,
+        "approval_rate_lo": 0.6028759521560181,
+        "approval_rate_hi": 0.7047321825560369,
+        "tpr_lo": 0.4110735806551171,
+        "tpr_hi": 0.6956691437607867,
+        "fpr_lo": 0.26173142718669185,
+        "fpr_hi": 0.36820481219796075,
+        "note": ""
+      }
+    ],
+    "age_band": [
+      {
+        "group": "18-29",
+        "n": 143,
+        "n_default": 16,
+        "n_good": 127,
+        "approval_rate": 0.5734265734265734,
+        "default_rate": 0.11188811188811189,
+        "mean_score": 0.11750760862576831,
+        "tpr": 0.5,
+        "fpr": 0.41732283464566927,
+        "approval_rate_lo": 0.4914867363162572,
+        "approval_rate_hi": 0.6515245084536174,
+        "tpr_lo": 0.2799923761135083,
+        "tpr_hi": 0.7200076238864916,
+        "fpr_lo": 0.33522000130170465,
+        "fpr_hi": 0.5042805856675773,
+        "note": "fewer than 30 defaulters: TPR unreliable"
+      },
+      {
+        "group": "30-39",
+        "n": 282,
+        "n_default": 28,
+        "n_good": 254,
+        "approval_rate": 0.6843971631205674,
+        "default_rate": 0.09929078014184398,
+        "mean_score": 0.09110054370254975,
+        "tpr": 0.6785714285714286,
+        "fpr": 0.2755905511811024,
+        "approval_rate_lo": 0.6279831737236952,
+        "approval_rate_hi": 0.7358547001197202,
+        "tpr_lo": 0.4933850455563118,
+        "tpr_hi": 0.8206695245657927,
+        "fpr_lo": 0.22429307703689388,
+        "fpr_hi": 0.3335750094161843,
+        "note": "fewer than 30 defaulters: TPR unreliable"
+      },
+      {
+        "group": "40-49",
+        "n": 235,
+        "n_default": 18,
+        "n_good": 217,
+        "approval_rate": 0.7276595744680852,
+        "default_rate": 0.07659574468085106,
+        "mean_score": 0.07513627272200776,
+        "tpr": 0.6111111111111112,
+        "fpr": 0.24423963133640553,
+        "approval_rate_lo": 0.6674217556425572,
+        "approval_rate_hi": 0.7805739034051129,
+        "tpr_lo": 0.3861866858065617,
+        "tpr_hi": 0.7969500807306884,
+        "fpr_lo": 0.1918491529930795,
+        "fpr_hi": 0.30552815273192885,
+        "note": "fewer than 30 defaulters: TPR unreliable"
+      },
+      {
+        "group": "50-59",
+        "n": 216,
+        "n_default": 13,
+        "n_good": 203,
+        "approval_rate": 0.7962962962962963,
+        "default_rate": 0.06018518518518518,
+        "mean_score": 0.0682271591391032,
+        "tpr": 0.5384615384615384,
+        "fpr": 0.18226600985221675,
+        "approval_rate_lo": 0.7376275401231382,
+        "approval_rate_hi": 0.844609852617817,
+        "tpr_lo": 0.2914343243183205,
+        "tpr_hi": 0.7679424569851186,
+        "fpr_lo": 0.13522391619763957,
+        "fpr_hi": 0.24111043820689027,
+        "note": "fewer than 30 defaulters: TPR unreliable"
+      },
+      {
+        "group": "60+",
+        "n": 124,
+        "n_default": 6,
+        "n_good": 118,
+        "approval_rate": 0.8951612903225806,
+        "default_rate": 0.04838709677419355,
+        "mean_score": 0.04874528787752881,
+        "tpr": 0.3333333333333333,
+        "fpr": 0.09322033898305085,
+        "approval_rate_lo": 0.8288708942105224,
+        "approval_rate_hi": 0.9377027406626329,
+        "tpr_lo": 0.09676933255921683,
+        "tpr_hi": 0.7000116786584712,
+        "fpr_lo": 0.05285105557398857,
+        "fpr_hi": 0.1592407094717757,
+        "note": "fewer than 30 defaulters: TPR unreliable"
+      }
+    ]
+  },
+  "gaps": {
+    "gender": {
+      "approval_rate_gap": 0.1097,
+      "tpr_gap": 0.0471,
+      "fpr_gap": 0.1001,
+      "default_rate_gap": 0.0731,
+      "approval_ratio": 0.8566
+    },
+    "age_band": {
+      "approval_rate_gap": 0.3217,
+      "tpr_gap": 0.3452,
+      "fpr_gap": 0.3241,
+      "default_rate_gap": 0.0635,
+      "approval_ratio": 0.6406
+    }
+  },
+  "proxy": {
+    "target": "CODE_GENDER (M vs F)",
+    "auc": 0.8634,
+    "strongest_single_features": {
+      "AMT_INCOME_TOTAL": 0.644,
+      "CREDIT_INCOME_RATIO": 0.599,
+      "DAYS_BIRTH": 0.593,
+      "EXT_SOURCE_1": 0.585,
+      "BUREAU_AMT_CREDIT_SUM_MEAN": 0.584
+    },
+    "gender_is_a_model_feature": true
+  }
+}
