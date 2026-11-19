@@ -1,0 +1,17 @@
+$ python -m ruff check .
+All checks passed!
+$ python -m pytest -q
+.....................................xx................................. [ 32%]
+........................................................................ [ 64%]
+........................................................................ [ 97%]
+......                                                                   [100%]
+=========================== short test summary info ============================
+XFAIL tests/model/test_model_behavior.py::test_gender_does_not_change_the_score - see docs/test_findings.md
+XFAIL tests/model/test_model_behavior.py::test_higher_income_does_not_raise_risk - see docs/test_findings.md
+220 passed, 2 xfailed in 35.49s
+$ python -m scripts.quality_gate
+Candidate: validation AUC 0.736, cost 0.564 at threshold 0.085, model tests {'passed': 2, 'failed': 0, 'xfail': 2, 'skipped': 0}; registered model AUC 0.736
+
+GATE PASSED
+
+CI would be GREEN.

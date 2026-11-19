@@ -1,0 +1,11 @@
+{
+  "batch": 1,
+  "url": "https://credit-risk-api-480708713552.us-central1.run.app",
+  "sent": 1000,
+  "ok": 1000,
+  "statuses": {
+    "200": 1000
+  },
+  "seconds": 39.7,
+  "sent_at": "2026-11-16T23:58:28+00:00"
+}
