@@ -75,7 +75,25 @@ def decide(comparison: dict[str, Any], failures: list[str],
     The recent slice decides because it looks like the applicants the model will see next;
     the validation slice is already guarded by the gate.
     """
-    raise NotImplementedError("TODO(student): promote or keep, with the reasons")
+    if failures:
+        return {"decision": "keep", "reasons": [f"gate: {f}" for f in failures]}
+
+    recent = comparison["recent"]
+    champ = float(recent["champion"]["cost"])
+    chall = float(recent["challenger"]["cost"])
+    tolerance = float(rule.get("max_cost_increase", 0.0))
+    limit = champ + tolerance
+    diff = chall - champ
+    if chall > limit:
+        return {"decision": "keep", "reasons": [
+            f"the challenger costs {chall:.3f} per applicant on the recent slice vs the "
+            f"champion's {champ:.3f} ({diff:+.3f}), above the allowed maximum of "
+            f"{limit:.3f} (champion + max_cost_increase {tolerance:.3f})"]}
+    return {"decision": "promote", "reasons": [
+        "the challenger passed the quality gate",
+        f"the challenger costs {chall:.3f} per applicant on the recent slice vs the "
+        f"champion's {champ:.3f} ({diff:+.3f}), within the allowed maximum of {limit:.3f} "
+        f"(champion + max_cost_increase {tolerance:.3f})"]}
 
 
 # PROVIDED

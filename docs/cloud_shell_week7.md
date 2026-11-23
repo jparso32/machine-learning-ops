@@ -27,7 +27,7 @@ PROJECT=$(gcloud config get-value project)
 REGION=us-central1
 BUCKET=<your bucket's name>
 URL=$(gcloud run services describe credit-risk-api --region=$REGION --format='value(status.url)')
-echo $BUCKET $URL
+    echo $BUCKET $URL
 ```
 
 **Check:** it prints your bucket's name and your service URL. If a later command complains
