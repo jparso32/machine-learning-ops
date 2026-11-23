@@ -93,8 +93,47 @@ Evidence: [`summary.json`](../reports/monitoring/summary.json), [`drift_batch1.c
 
 ## 5. Proposed alerts
 
-Scheduled for the later Week 6 submission (sections 5–6 are due after the Part 4 carry-over).
+Each alert compares a production window with the same fixed references used above: the 4,000 training rows for inputs and the validation set for outputs (approval rate 72.9%, mean score 0.0809). The thresholds below reuse our PSI cut-offs (0.10 and 0.25) and the quality gate in `config/gate.yaml` (minimum AUC 0.70, maximum cost 0.70 per applicant). A window must have at least 100 predictions before alerts 1, 2, 3 or 4 are evaluated, the same minimum we used to exclude batch 3. The owner is Team 2's ML on-call engineer unless the table says otherwise.
+
+| # | Signal | Threshold | Checked | Triggers (who is told, what they do first) |
+|---|---|---|---|---|
+| 1 | Feature drift: PSI of each of the 164 features against training | **Major:** any feature PSI ≥ 0.25. **Moderate:** three or more features with PSI ≥ 0.10 | Per batch, and daily on the last 24 h of logs | Major drift notifies the ML on-call engineer and the data-engineering owner of that feature's source. Moderate drift opens a review ticket. **First step:** compare the drifted field in the log with the source system (units, scaling, transformation). Check whether related features moved together, as income and the two income ratios did in batch 2. If it is a pipeline bug, route affected applications to manual review until it is fixed. |
+| 2 | Missing share of key inputs (`EXT_SOURCE_1/2/3`, `AMT_INCOME_TOTAL`, `AMT_CREDIT`, `AMT_ANNUITY`) | Rises by more than **10 percentage points** above the training share | Per batch, and daily | Notifies the ML on-call engineer and the owner of the external-score feed or join. **First step:** check feed availability, join keys and error logs for the missing source. Imputed values make the scores look normal, so flag affected decisions for review rather than trusting them. |
+| 3 | Model output: approval rate, and PSI of the score distribution against validation | Approval rate outside **72.9% ± 5 points**, or score PSI ≥ **0.10** | Daily | Notifies the ML model owner and the credit-risk owner. **First step:** check whether alerts 1 or 2 also fired, which would point to a data problem rather than a population change. Then segment the change by product and channel. Do **not** change the threshold until the cause is known and the credit-risk owner approves. |
+| 4 | Fairness of decisions: approval rate by gender and by age band | Lowest/highest approval ratio below **0.80** for either attribute, or a group's approval rate moving more than **5 points** from its validation value. Only groups with at least 100 predictions in the window are compared. | Weekly (daily windows are too small per group) | Notifies the ML model owner and compliance. **First step:** check whether the change follows input drift (alert 1 or 2) or a change in the applicant mix. Then report the result, with Wilson intervals, to the credit-policy owner, who decides on action. The age ratio is already 0.64 on validation, so the age alert fires from the start until policy sets an accepted level (see [fairness_analysis.md](fairness_analysis.md)). |
+| 5 | Logging completeness: logged predictions divided by successful `/predict` responses (HTTP 200) | Below **99%**, or any logging-exception warning | Hourly | Notifies the ML on-call engineer. **First step:** look in Cloud Logging for logging-exception warnings and compare request counts with log entries. A drift report on an incomplete log can be biased. Batch 1 (986 of 1,000, 98.6%) would have fired this alert. |
+| 6 | Service health: error rate and latency of the Cloud Run service | 5xx rate > **1%** over 5 minutes, or p95 latency > **500 ms** (baseline about 90 ms) | Continuously (Cloud Monitoring, 5-minute windows) | Pages the on-call engineer. **First step:** check the latest Cloud Run revision and its logs, and roll back to the previous revision if the problem started with a deploy. |
+| 7 | Realised performance, once repayment outcomes arrive: AUC, cost per applicant at 0.085, and predicted vs observed default rate | AUC < **0.70** or cost > **0.70** (the quality-gate limits), or observed default rate in a score band more than 1.5 times the predicted rate | Monthly, on loans whose outcome window has closed | Notifies the model owner and the credit-risk owner. **First step:** confirm that enough matured outcomes exist (at least 80 defaulters) and check calibration by score band and by group. Then decide between recalibrating, retraining on recent data, and pausing the model. |
+
+Applied to our data, batch 2 would have fired alert 1, major drift on four features: `AMT_INCOME_TOTAL` 1.10, `EXT_SOURCE_3` 0.53, `ANNUITY_INCOME_RATIO` 0.47 and `CREDIT_INCOME_RATIO` 0.26. It would also have fired alert 2, because `EXT_SOURCE_3` missingness rose by 33.6 points. Alert 3 would not have fired: approval fell 3.8 points and the score PSI was 0.012. This is why input alerts are needed in addition to output alerts. A broken income field changed decisions without moving the score distribution enough to notice.
 
 ## 6. Limitations
 
-Scheduled for the later Week 6 submission. The limitations relevant to the current analysis are recorded in sections 1–4: incomplete batch 1 log coverage, unavailable Evidently column details, and no observed repayment outcomes.
+**Whether the decisions were right.** The monitoring sees inputs, scores and decisions, but not outcomes. We cannot measure live AUC, cost, calibration or the error rates by group (TPR/FPR) until repayment behaviour is observed. The target is "payment difficulties" on the loan, so outcomes mature over months, not days. Realistically, 6 to 12 months pass before alert 7 has enough matured loans, and 80 defaulters (our validation count) need about 1,000 approved applicants whose outcomes have matured. Until then, a drift alert says that something changed, not that the model got worse.
+
+**Outcomes only for approved applicants.** Declined applicants never receive a loan, so we never learn whether they would have repaid. Live performance is measured on a filtered population. This hides the cost of wrongly declining good payers, which is the error that falls most on men and young applicants in the fairness analysis. Measuring it would need a small randomised approval sample or reject-inference methods.
+
+**What the drift measures miss.**
+
+- PSI and KS look at one feature at a time. They miss changes in how features relate to each other, and changes in the relationship between features and default (concept drift) when the inputs look the same.
+- KS drops missing values, which is why `EXT_SOURCE_3` looked stable on KS while PSI caught the change.
+- With 164 features, several small "significant" results are expected by chance in every batch.
+- Batches of about 1,000 requests are small for rare categories and for per-group fairness checks.
+
+**What the evidence does not record.**
+
+- The Evidently HTML reports were not kept, so we cannot see which columns Evidently flagged.
+- The log export is not reconciled with requests served: 14 batch 1 predictions are missing, and the cause is unknown.
+- `load_logs` keeps only the latest record per applicant, which hides repeated requests and overrides.
+- The batches were sent within about a minute of each other, so we have not seen real traffic patterns: daily cycles, seasonality or gradual drift.
+
+**Not yet automated.** Everything is run by hand (`gcloud logging read`, then `python run.py monitor`). No alert above is wired up yet, and none is checked on a schedule.
+
+**With more time, we would add:**
+
+- A scheduled job (Cloud Scheduler plus a Cloud Run job) that exports the logs and computes the drift summary daily.
+- Log-based metrics and alerting policies in Cloud Monitoring for alerts 1 to 6.
+- Input validation at the API: income units and plausible ranges, and required external scores. Bad data would then be rejected or flagged before scoring, not only detected afterwards.
+- Retention of the Evidently reports and a reconciliation of log counts with requests served.
+- A multivariate drift check: a classifier that tries to tell training rows from production rows.
+- An outcome pipeline that joins matured repayment results to logged decisions, so that alert 7 and per-group FPR/TPR can be computed. Ideally it would include a small control group of applicants who are not filtered by the model.
