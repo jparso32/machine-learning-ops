@@ -10,6 +10,11 @@ long it took. The predictions themselves are in your service's log, not in the r
 
 Send each batch ONCE. Sending a batch twice logs every applicant twice (the monitoring keeps
 only the latest answer per applicant and batch, but your receipt would no longer match).
+
+Week 7 (the demo): ``--drift-income 0.7`` sends every applicant with an updated income of 0.7
+times the stored one (an override, as the loan screen could send), so the service sees the
+same upstream change as batch 2 and recomputes the ratios. ``python run.py send --batch 3
+--drift-income 0.7 --url ...`` is the drifted traffic that should raise your alert.
 """
 
 from __future__ import annotations
@@ -23,6 +28,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
+import pandas as pd
 
 PRODUCTION_DIR = Path("data/production")
 REPORTS = Path("reports")
@@ -34,6 +40,16 @@ def read_batch(batch: int) -> list[dict]:
     if not path.exists():
         raise SystemExit(f"{path} not found: run python run.py pool first")
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+
+
+# PROVIDED
+def with_income_drift(requests: list[dict], factor: float) -> list[dict]:
+    """Each request with AMT_INCOME_TOTAL = factor x the applicant's stored income."""
+    store = PRODUCTION_DIR / "store_extension.parquet"
+    income = pd.read_parquet(store, columns=["SK_ID_CURR", "AMT_INCOME_TOTAL"])
+    lookup = dict(zip(income["SK_ID_CURR"], income["AMT_INCOME_TOTAL"], strict=True))
+    return [{**r, "AMT_INCOME_TOTAL": round(float(lookup[r["SK_ID_CURR"]]) * factor, 2)}
+            for r in requests if r["SK_ID_CURR"] in lookup]
 
 
 # PROVIDED
@@ -67,13 +83,18 @@ def main() -> None:
     parser.add_argument("--batch", type=int, required=True, choices=[1, 2, 3])
     parser.add_argument("--url", default="http://127.0.0.1:8000", help="the service's base URL")
     parser.add_argument("--workers", type=int, default=8, help="requests in flight at once")
+    parser.add_argument("--drift-income", type=float, default=None,
+                        help="send income x this factor (Week 7 demo: 0.7)")
     args = parser.parse_args()
     url = args.url.rstrip("/")
     requests = read_batch(args.batch)
+    if args.drift_income:
+        requests = with_income_drift(requests, args.drift_income)
 
     print(f"Sending batch {args.batch} ({len(requests):,} applicants) to {url} ...")
     statuses, seconds = send(url, requests, args.workers)
     receipt = {"batch": args.batch, "url": url, "sent": len(requests),
+               "drift_income": args.drift_income,
                "ok": statuses.get(200, 0),
                "statuses": {str(k): v for k, v in sorted(statuses.items())},
                "seconds": round(seconds, 1),

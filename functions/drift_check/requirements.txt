@@ -1,0 +1,7 @@
+# PROVIDED: what the drift-check function installs when it is deployed (not your laptop).
+functions-framework==3.*
+google-cloud-logging>=3.10
+google-cloud-storage>=2.16
+google-auth>=2.29
+requests>=2.31
+numpy>=1.26

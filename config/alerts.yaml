@@ -1,0 +1,24 @@
+# Your drift alerts (Week 6, docs/monitoring_report.md section 5, now for real).
+# python run.py reference copies them into reports/monitoring/drift_reference.json, which the
+# drift-check function in the cloud reads. The function refuses to run while a value is null.
+#
+# TODO(student): set every value, and keep the reasons in docs/runbook.md.
+
+psi_alert: 0.25        # alert when a watched feature's PSI is at least this (Week 6: 0.25
+                           # is "major")
+missing_increase: 0.10     # alert when a watched feature's missing share rises by at least
+                           # this many points (0.10 = 10 points), compared with training
+score_psi_alert: 0.25      # alert when the PSI of the SCORES is at least this
+min_requests: 100         # do not judge a window with fewer predictions than this (too few
+                           # to measure a PSI: Week 6 used batches of 1,000)
+
+window_minutes: 60         # the check looks at the predictions of the last 60 minutes
+cooldown_hours: 6          # after starting a retrain, do not start another for this long
+
+top_features: 20           # watch your 20 most important features (SHAP, Week 6) ...
+extra_features: 
+  - AMT_INCOME_TOTAL
+  - EXT_SOURCE_3
+  - ANNUITY_INCOME_RATIO
+  - CREDIT_INCOME_RATIO         # ... plus these. TODO(student): add the features your Week 6
+                           # diagnosis found in batch 2, by name, for example [A, B]
