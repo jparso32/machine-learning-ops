@@ -24,10 +24,11 @@ steps:
         gcloud storage cp gs://${_BUCKET}/training/features.parquet data/features/
         gcloud storage cp gs://${_BUCKET}/training/store_extension.parquet \
           gs://${_BUCKET}/training/labels.parquet data/production/
-        gcloud run services describe ${_SERVICE} --region=${_REGION} --format=json \
-          | python3 -c "import json,sys; env=json.load(sys.stdin)['spec']['template']['spec']['containers'][0].get('env',[]); print(next(e['value'] for e in env if e['name']=='MODEL_BUCKET'))" \
-          > data/cloudretrain/champion.txt
-        echo "Champion folder: $$(cat data/cloudretrain/champion.txt)"
+        (
+          umask 077
+          gcloud run services describe ${_SERVICE} --region=${_REGION} --format=json \
+            > data/cloudretrain/service.json
+        )
 
   # 2. Retrain, compare, gate, decide, register (your code: src/cloud_retrain.py).
   - id: retrain
@@ -37,9 +38,27 @@ steps:
       - -c
       - |
         set -euo pipefail
+        # Parse the Cloud Run configuration in the image that already has Python.
+        champion=$$(python - <<'PY'
+        import json
+        from pathlib import Path
+
+        path = Path("data/cloudretrain/service.json")
+        raw = path.read_text()
+        path.unlink()
+        container = json.loads(raw)["spec"]["template"]["spec"]["containers"][0]
+        for entry in container.get("env", []):
+            if entry["name"] == "MODEL_BUCKET" and entry.get("value"):
+                print(entry["value"])
+                break
+        else:
+            raise SystemExit("Cloud Run service has no MODEL_BUCKET value")
+        PY
+        )
+        echo "Champion folder: $$champion"
         pip install --quiet --no-cache-dir -r requirements.txt
         python -m src.cloud_retrain --bucket gs://${_BUCKET} \
-          --champion "$$(cat data/cloudretrain/champion.txt)" --out data/cloudretrain
+          --champion "$$champion" --out data/cloudretrain
 
   # 3. Deploy only if the decision was "promote": point the service at the new folder.
   - id: deploy
