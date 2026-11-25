@@ -1,0 +1,62 @@
+# The automated retrain pipeline (Week 7). PROVIDED: read it, step by step.
+#
+# Started by the drift-check function (or by hand: Cloud Build -> Triggers -> retrain -> Run).
+# The trigger sets _BUCKET to your bucket's name. Cloud Build has no data of its own, so
+# the first step copies the training data from your PRIVATE bucket (training/).
+#
+# Note: $$ is a plain shell $ (Cloud Build itself replaces ${_BUCKET} and friends).
+
+substitutions:
+  _BUCKET: ""
+  _REGION: us-central1
+  _SERVICE: credit-risk-api
+
+steps:
+  # 1. The data, and which model folder the live service loads right now (the champion).
+  - id: data
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        mkdir -p data/features data/production data/cloudretrain
+        gcloud storage cp gs://${_BUCKET}/training/features.parquet data/features/
+        gcloud storage cp gs://${_BUCKET}/training/store_extension.parquet \
+          gs://${_BUCKET}/training/labels.parquet data/production/
+        gcloud run services describe ${_SERVICE} --region=${_REGION} --format=json \
+          | python3 -c "import json,sys; env=json.load(sys.stdin)['spec']['template']['spec']['containers'][0].get('env',[]); print(next(e['value'] for e in env if e['name']=='MODEL_BUCKET'))" \
+          > data/cloudretrain/champion.txt
+        echo "Champion folder: $$(cat data/cloudretrain/champion.txt)"
+
+  # 2. Retrain, compare, gate, decide, register (your code: src/cloud_retrain.py).
+  - id: retrain
+    name: python:3.11-slim
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        pip install --quiet --no-cache-dir -r requirements.txt
+        python -m src.cloud_retrain --bucket gs://${_BUCKET} \
+          --champion "$$(cat data/cloudretrain/champion.txt)" --out data/cloudretrain
+
+  # 3. Deploy only if the decision was "promote": point the service at the new folder.
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -euo pipefail
+        if [ -f data/cloudretrain/promote.txt ]; then
+          gcloud run services update ${_SERVICE} --region=${_REGION} \
+            --update-env-vars=MODEL_BUCKET=$$(cat data/cloudretrain/promote.txt)
+          echo "PROMOTED: the service now loads $$(cat data/cloudretrain/promote.txt)"
+        else
+          echo "KEPT: the decision was keep; the champion keeps serving."
+        fi
+
+timeout: 1800s
+options:
+  logging: CLOUD_LOGGING_ONLY

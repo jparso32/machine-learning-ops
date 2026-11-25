@@ -34,6 +34,8 @@ Usage (from the repository root):
     python run.py champion     compare champion and challenger, run the gate, decide
     python run.py promote      make the challenger the champion (then export runs)
     python run.py rollback     make an earlier version the champion again (--version N)
+    python run.py reference    the drift reference for the cloud check -> reports/monitoring/
+    python run.py cloudretrain the Cloud Build retrain pipeline, run locally (--bucket DIR)
     python run.py lint         check code style
     python run.py check        run the Week 7 checks (--stage mon / --stage wed: one checkpoint)
     python run.py check6       run the Week 6 checks
@@ -100,6 +102,8 @@ COMMANDS = {
     "champion": "compare champion and challenger, run the gate, decide",
     "promote": "make the challenger the champion (--override REASON)",
     "rollback": "make an earlier version the champion again (--version N)",
+    "reference": "the drift reference for the cloud check -> reports/monitoring/",
+    "cloudretrain": "the Cloud Build retrain pipeline, run locally (--bucket DIR)",
     "lint": "check code style",
     "check": "run the Week 7 checks (--stage mon, --stage wed)",
     "check6": "run the Week 6 checks",
@@ -140,6 +144,8 @@ MODULES = {
     "champion": ["-m", "src.champion"],
     "promote": ["-m", "src.promote", "promote"],
     "rollback": ["-m", "src.promote", "rollback"],
+    "reference": ["-m", "src.drift_reference"],
+    "cloudretrain": ["-m", "src.cloud_retrain"],
     "lint": ["-m", "ruff", "check", "."],
     "check": ["-m", "scripts.check_week7"],
     "check6": ["-m", "scripts.check_week6"],
