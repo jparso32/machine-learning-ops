@@ -1,0 +1,23 @@
+{
+  "decision": "keep",
+  "reasons": [
+    "gate: 1 model tests failed, limit 0."
+  ],
+  "gate_failures": [
+    "1 model tests failed, limit 0."
+  ],
+  "model_tests": {
+    "passed": 2,
+    "failed": 1,
+    "xfail": 1,
+    "skipped": 0
+  },
+  "champion_version": "1",
+  "challenger_version": "2",
+  "champion_threshold": 0.085,
+  "challenger_threshold": 0.075,
+  "rule": {
+    "max_cost_increase": 0.0
+  },
+  "created": "2026-11-23T19:48:16+00:00"
+}
